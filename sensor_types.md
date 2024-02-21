@@ -35,6 +35,8 @@ Taking this into consideration, the following structure was formed for the paylo
 </tbody>
 </table>
 
+<b>NOTE:</b> For negative values (temperature) the bit 7 of the MSB will be set to one.
+
 ## Data Types
 
 The IPSO (IP for Smart Objects) Alliance Smart Objects Guidelines, which identifies each data type with an "Object ID". However, a conversion would have to be made so that the "Object ID" would fit into a single byte and "Object ID" would be added for some types of measurements that are not complemented in IPSO.
@@ -48,14 +50,14 @@ Therefore, it was decided to create a new set of data types to be used in agricu
 <tr>
 <td style="font-size: 15px; padding: 10px;"><b>Type</b></td>
 <td style="font-size: 15px; padding: 10px;"><b>Code</b></td>
-<td style="font-size: 15px; padding: 10px;"><b>Value (uint16)</b></td>
+<td style="font-size: 15px; padding: 10px;"><b>Value (int16)</b></td>
 <td style="font-size: 15px; padding: 10px;"><b>Sensor</b></td>
 <td style="font-size: 15px; padding: 10px;"><b>Remarks</b></td>
 </tr>
 <tr>
 <td> AIR TEMPERATURE </td>
 <td> 0x01 </td>
-<td> (read + 40) * 100</td>
+<td> read * 100</td>
 <td> <a href="https://www.bosch-sensortec.com/products/environmental-sensors/gas-sensors/bme680/">BME680</a>, <a href="https://www.sensirion.com/products/catalog/SHTC3/">SHTC3</a>, <a href="https://metergroup.com/products/atmos-41/">ATMOS 41</a></td>
 <td>BME680 and SHTC3 can be found in WisBlock system</td>
 </tr>
@@ -132,14 +134,14 @@ Therefore, it was decided to create a new set of data types to be used in agricu
 <tr>
 <td> INFRA-RED OBJECT TEMP      </td>
 <td>0x0C</td>
-<td> (read + 40) * 100</td>
+<td> read * 100</td>
 <td> <a href="https://www.apogeeinstruments.com/sil-411-commercial-grade-sdi-12-digital-output-standard-field-of-view-infrared-radiometer-sensor/">SIL-411</a></td>
 <td></td>
 </tr>
 <tr>
 <td> INFRA-RED BODY TEMP       </td>
 <td> 0x0D</td>
-<td> (read + 40) * 100</td>
+<td> read * 100</td>
 <td> <a href="https://www.apogeeinstruments.com/sil-411-commercial-grade-sdi-12-digital-output-standard-field-of-view-infrared-radiometer-sensor/">SIL-411</a></td>
 <td></td>
 </tr>
@@ -335,3 +337,267 @@ Therefore, it was decided to create a new set of data types to be used in agricu
 ## More Sensors
 
 More sensors that can be used for agriculture with LoRaWAN (RAK Wireless WisBlock system) can be found <a href="https://store.rakwireless.com/collections/wisblock-sensor">here</a>.
+
+
+## Decoder at TTN
+
+On the TTN server side, data in the format <DataType><MSB><LSB> will have to be decoded to JSON to be subsequently saved in a database (InfluxDB, for example).
+
+As an example for air humidity values we will have
+``` js
+data.AirHumidity = parseFloat((((input.bytes[j+1] * 256.0) + input.bytes[j+2]) / 100.0).toFixed(2));
+```
+
+
+``` js
+function decodeUplink(input) {
+	var data = {};
+	var events = {
+		1: "setup",
+		2: "environmental data",
+		3: "soil data",
+		4: "plant data"
+	};
+	var event_idx = 0;
+	
+ 
+	// environmental data
+	if (input.fPort === 2) {
+	  for(var j = 0; j < input.bytes.length; j += 3) {
+		var sensorType = input.bytes[j];
+
+		switch(sensorType) {
+			// air temperature
+			case 0x01:  if(input.bytes[j+1] > 127) 
+							data.AirTemperature = parseFloat(((((input.bytes[j+1] & 0x7F) * 256.0) + input.bytes[j+2]) / (-100.0)).toFixed(2));
+						else
+							data.AirTemperature = parseFloat((((input.bytes[j+1] * 256.0) + input.bytes[j+2]) / 100.0).toFixed(2));
+						event_idx = 2;
+						break;
+			// air humidity
+			case 0x02:  data.AirHumidity = parseFloat((((input.bytes[j+1] * 256.0) + input.bytes[j+2]) / 100.0).toFixed(2));
+						event_idx = 2;
+						break;
+			// vapour pressure
+			case 0x03:  data.VapourPressure = parseFloat((((input.bytes[j+1] * 256.0) + input.bytes[j+2]) / 100.0).toFixed(2));
+						event_idx = 2;
+						break;
+			// barometric pressure
+			case 0x04:  data.BarometricPressure = parseFloat((((input.bytes[j+1] * 256.0) + input.bytes[j+2]) / 10.0).toFixed(1));
+						event_idx = 2;
+						break;
+			// wind speed
+			case 0x05:  data.WindSpeed = parseFloat((((input.bytes[j+1] * 256.0) + input.bytes[j+2]) / 100.0).toFixed(2));
+						event_idx = 2;
+						break;
+			// wind direction
+			case 0x06:  data.WindDirection = parseFloat((((input.bytes[j+1] * 256.0) + input.bytes[j+2]) / 10.0).toFixed(2));
+						event_idx = 2;
+						break;
+			// wind gust
+			case 0x07:  data.WindGust = parseFloat((((input.bytes[j+1] * 256.0) + input.bytes[j+2]) / 100.0).toFixed(2));
+						event_idx = 2;
+						break;
+			// precepitation
+			case 0x08:  data.Precipitation = parseFloat((((input.bytes[j+1] * 256.0) + input.bytes[j+2]) * 0.017).toFixed(2));
+						event_idx = 2;
+						break;            
+			// lightnimg counter
+			case 0x09:  data.LightningCounter = parseFloat((((input.bytes[j+1] * 256.0) + input.bytes[j+2])).toFixed(2));
+						event_idx = 2;
+						break;            
+			// lightning distance
+			case 0x0A:  data.LightningDistance = parseFloat((((input.bytes[j+1] * 256.0) + input.bytes[j+2])).toFixed(2));
+						event_idx = 2;
+						break;
+			// solar radiation
+			case 0x0B:  data.SolarRadiation = parseFloat((((input.bytes[j+1] * 256.0) + input.bytes[j+2])).toFixed(2));
+						event_idx = 2;
+						break;            
+			// CO2
+			case 0x20:  data.CO2 = parseFloat((((input.bytes[j+1] * 256.0) + input.bytes[j+2]) * 10).toFixed(2));
+						event_idx = 2;
+						break;
+			// IAQ (air quality index)                        
+			case 0x21:  data.IAQ = parseFloat((((input.bytes[j+1] * 256.0) + input.bytes[j+2]) / 100.0).toFixed(2));
+						event_idx = 2;
+						break;
+						
+			// Soil data -> base 0x40			
+			// Soil Volumetric Water Content
+			case 0x40:  data.TerosRAWVolumetricWaterContent = parseFloat((((input.bytes[j+1] * 256.0) + input.bytes[j+2]) / 100.0).toFixed(2));
+						event_idx = 3;
+						break;    			
+			// Soil Water Tension             
+			case 0x41:  if(input.bytes[j+1] > 127)
+							data.SoilWaterTension = parseFloat(((((input.bytes[j+1] & 0x7F) * 256.0) + input.bytes[j+2]) / (-100.0)).toFixed(2));
+						else
+							data.SoilWaterTension = parseFloat((((input.bytes[j+1] * 256.0) + input.bytes[j+2]) / 100.0).toFixed(2));
+						event_idx = 3;
+						break;                       
+			// Soil EC
+			case 0x42:  data.SoilEC = parseFloat((((input.bytes[j+1] * 256.0) + input.bytes[j+2]) / 100.0).toFixed(2));
+						event_idx = 3;
+						break;                        
+			// Soil Temperature #1
+			case 0x43:  if(input.bytes[j+1] > 127)
+							data.SoilTemperature1 = parseFloat(((((input.bytes[j+1] & 0x7F) * 256.0) + input.bytes[j+2]) / (-100.0)).toFixed(2));
+						else
+							data.SoilTemperature1 = parseFloat((((input.bytes[j+1] * 256.0) + input.bytes[j+2]) / 100.0).toFixed(2));
+						event_idx = 3;
+						break;
+			// Soil Temperature #2
+			case 0x44:  if(input.bytes[j+1] > 127)
+							data.SoilTemperature2 = parseFloat(((((input.bytes[j+1] & 0x7F) * 256.0) + input.bytes[j+2]) / (-100.0)).toFixed(2));
+						else
+							data.SoilTemperature2 = parseFloat((((input.bytes[j+1] * 256.0) + input.bytes[j+2]) / 100.0).toFixed(2));
+						event_idx = 3;
+						break;
+			// Soil Temperature #3
+			case 0x45:  if(input.bytes[j+1] > 127)
+							data.SoilTemperature3 = parseFloat(((((input.bytes[j+1] & 0x7F) * 256.0) + input.bytes[j+2]) / (-100.0)).toFixed(2));
+						else
+							data.SoilTemperature3 = parseFloat((((input.bytes[j+1] * 256.0) + input.bytes[j+2]) / 100.0).toFixed(2));
+						event_idx = 3;
+						break;                        
+			// Soil Dieletric Permittivity
+			case 0x50:  data.DielectricPermittivity = parseFloat((((input.bytes[j+1] * 256.0) + input.bytes[j+2]) / 100.0).toFixed(2));
+						event_idx = 3;
+						break;   
+			// Soil Raw VolumetricWaterContent           
+			case 0x46:  if(input.bytes[j+1] > 127)
+							data.RAWVolumetricWaterContent = parseFloat(((((input.bytes[j+1] & 0x7F) * 256.0) + input.bytes[j+2]) / (-1000.0)).toFixed(3));
+						else
+							data.RAWVolumetricWaterContent = parseFloat((((input.bytes[j+1] * 256.0) + input.bytes[j+2]) / 1000.0).toFixed(3));
+						event_idx = 3;
+						break;  
+			// Soil Volumetric Water Content
+			case 0x47:  data.VolumetricWaterContent = parseFloat((((input.bytes[j+1] * 256.0) + input.bytes[j+2]) / 100.0).toFixed(2));
+						event_idx = 3;
+						break;     						
+			// Soil Salinity            
+			case 0x51:  data.Salinity = parseFloat(((input.bytes[j+1] * 256.0) + input.bytes[j+2]).toFixed(0));
+						event_idx = 3;
+						break;                       
+			// Soil TDS - Total Dissolved Solids            
+			case 0x52:  data.SoilTDS = parseFloat(((input.bytes[j+1] * 256.0) + input.bytes[j+2]).toFixed(0));
+						event_idx = 3;
+						break; 
+			// Soil TDS - Total Dissolved Solids            
+			case 0x53:  if(input.bytes[j+1] > 127)
+							data.SoilEpsilon = parseFloat(((((input.bytes[j+1] & 0x7F) * 256.0) + input.bytes[j+2]) / (-100.0)).toFixed(2));
+						else
+							data.SoilEpsilon = parseFloat((((input.bytes[j+1] * 256.0) + input.bytes[j+2]) / 100.0).toFixed(2));
+						event_idx = 3;
+						break;                        
+
+			// Plant -> base 0x60
+			// Leaf Wetmess
+			case 0x60:  data.LeafWetness = parseFloat((((input.bytes[j+1] * 256.0) + input.bytes[j+2]) / 1000.0).toFixed(3));
+						event_idx = 4;
+						break;
+			// Steam Water Potential
+			case 0x65:  if(input.bytes[j+1] > 127) 
+							data.SteamWaterPotential = parseFloat(((((input.bytes[j+1] & 0x7F) * 256.0) + input.bytes[j+2]) / (-100.0)).toFixed(2));
+						else
+							data.SteamWaterPotential = parseFloat((((input.bytes[j+1] * 256.0) + input.bytes[j+2]) / 100.0).toFixed(2));
+						event_idx = 4;
+						break;
+			// FloraPulse reading of the sensor in mV/V,
+			case 0x66:  if(input.bytes[j+1] > 127) 
+							data.FloraPulseReading = parseFloat(((((input.bytes[j+1] & 0x7F) * 256.0) + input.bytes[j+2]) / (-100.0)).toFixed(2));
+						else
+							data.FloraPulseReading = parseFloat((((input.bytes[j+1] * 256.0) + input.bytes[j+2]) / 100.0).toFixed(2));
+						event_idx = 4;
+						break;
+			// FloraPulse thermistor
+			case 0x67:  if(input.bytes[j+1] > 127) 
+							data.FloraPulseThermistor = parseFloat(((((input.bytes[j+1] & 0x7F) * 256.0) + input.bytes[j+2]) / (-100.0)).toFixed(2));
+						else
+							data.FloraPulseThermistor = parseFloat((((input.bytes[j+1] * 256.0) + input.bytes[j+2]) / 100.0).toFixed(2));
+						event_idx = 4;
+						break;
+					// SIL-411 Object temperature
+			case 0x6C:  if(input.bytes[j+1] > 127) 
+							data.IRObjectTemperature = parseFloat(((((input.bytes[j+1] & 0x7F) * 256.0) + input.bytes[j+2]) / (-100.0)).toFixed(2));
+						else
+							data.IRObjectTemperature = parseFloat((((input.bytes[j+1] * 256.0) + input.bytes[j+2]) / 100.0).toFixed(2));
+						event_idx = 4;
+						break;
+								// SIL-411 Object temperature
+			case 0x6D:  if(input.bytes[j+1] > 127) 
+							data.IRBodyTemperature = parseFloat(((((input.bytes[j+1] & 0x7F) * 256.0) + input.bytes[j+2]) / (-100.0)).toFixed(2));
+						else
+							data.IRBodyTemperature = parseFloat((((input.bytes[j+1] * 256.0) + input.bytes[j+2]) / 100.0).toFixed(2));
+						event_idx = 4;
+						break;
+						
+			// battery
+			case 0xA0:  data.battery = parseFloat((((input.bytes[j+1]*256.0)+input.bytes[j+2])/1000.0).toFixed(3));
+						break;
+			// altitude
+			case 0xB0:  data.altitude = parseFloat((((input.bytes[j+1] * 256.0) + input.bytes[j+2]) / 10.0).toFixed(2));
+						break;
+		  } // end case
+	  } // end for - sensorType 
+	 
+	} // end if port = 2
+
+  data.event = events[event_idx];
+	
+  var warnings = [];
+  if (data.battery < 3.000) {
+    warnings.push("low battery");
+  }
+  return {
+    data: data,
+    warnings: warnings
+  };
+}
+
+```
+
+
+
+An JSON exemple of complete uplink data
+
+``` yaml
+{
+  "f_port": 2,
+  "frm_payload": "AQP/Ahf/",
+  "decoded_payload": {
+    "AirHumidity": 61.43,
+    "AirTemperature": 10.23,
+    "event": "environmental data"
+  },
+  "rx_metadata": [
+    {
+      "gateway_ids": {
+        "gateway_id": "test"
+      },
+      "rssi": 42,
+      "channel_rssi": 42,
+      "snr": 4.2
+    }
+  ],
+  "settings": {
+    "data_rate": {
+      "lora": {
+        "bandwidth": 125000,
+        "spreading_factor": 7
+      }
+    },
+    "frequency": "868000000"
+  }
+}
+```
+
+Only the decoded payload
+
+``` yaml
+{
+  "AirHumidity": 61.43,
+  "AirTemperature": 10.23,
+  "event": "environmental data"
+}
+```
