@@ -190,28 +190,28 @@ Therefore, it was decided to create a new set of data types to be used in agricu
 <td> SOIL VWC TEROS RAW </td>
 <td> 0x40 </td>
 <td> read * 100</td>
-<td> TEROS 12</td>
+<td> <a href="https://metergroup.com/products/teros-12/">TEROS 12</a></td>
 <td> Raw Volumetric Water Content - TEROS sensor</td>
 </tr>
 <tr>
 <td> SOIL WATER TENSION </td>
 <td> 0x41 </td>
 <td> read * 100</td>
-<td> TEROS 21</td>
+<td> <a href="https://metergroup.com/products/teros-21/">TEROS 21</a></td>
 <td> TEROS 21 -> -5kPa to -100000kPa (0.1 kPa) </td>
 </tr>
 <tr>
 <td> SOIL EC </td>
 <td> 0x42 </td>
 <td> read * 100</td>
-<td> TEROS 12, 5TE, <a href="https://www.digikey.pt/pt/products/detail/seeed-technology-co.,-ltd/314990620/16570933?utm_adgroup=&utm_source=google&utm_medium=cpc&utm_campaign=PMax_Product_All%20Products&utm_term=&productid=16570933&utm_content=&utm_id=go_cmp-20187105315_adg-_ad-__dev-c_ext-_prd-16570933_sig-CjwKCAiA29auBhBxEiwAnKcSqj6BeoKupbwP-RZPg070JTDrAJbdjpTrq6t5b-9uiSRsAz9o3Zma6BoCn0wQAvD_BwE&gad_source=1&gclid=CjwKCAiA29auBhBxEiwAnKcSqj6BeoKupbwP-RZPg070JTDrAJbdjpTrq6t5b-9uiSRsAz9o3Zma6BoCn0wQAvD_BwE">SEEED SMS</a></td>
+<td> <a href="https://metergroup.com/products/teros-12/">TEROS 12</a>, <a href="https://s.campbellsci.com/documents/ca/product-brochures/5te_br.pdf">5TE</a>, <a href="https://www.digikey.pt/pt/products/detail/seeed-technology-co.,-ltd/314990620/16570933?utm_adgroup=&utm_source=google&utm_medium=cpc&utm_campaign=PMax_Product_All%20Products&utm_term=&productid=16570933&utm_content=&utm_id=go_cmp-20187105315_adg-_ad-__dev-c_ext-_prd-16570933_sig-CjwKCAiA29auBhBxEiwAnKcSqj6BeoKupbwP-RZPg070JTDrAJbdjpTrq6t5b-9uiSRsAz9o3Zma6BoCn0wQAvD_BwE&gad_source=1&gclid=CjwKCAiA29auBhBxEiwAnKcSqj6BeoKupbwP-RZPg070JTDrAJbdjpTrq6t5b-9uiSRsAz9o3Zma6BoCn0wQAvD_BwE">SEEED SMS</a></td>
 <td> Soil Electrical Conductivity</td>
 </tr>
 <tr>
 <td> SOIL TEMPERATURE 1 </td>
 <td> 0x43 </td>
 <td> read * 100</td>
-<td> TEROS 12, TEROS 21, <a href="https://www.digikey.pt/pt/products/detail/seeed-technology-co.,-ltd/314990620/16570933?utm_adgroup=&utm_source=google&utm_medium=cpc&utm_campaign=PMax_Product_All%20Products&utm_term=&productid=16570933&utm_content=&utm_id=go_cmp-20187105315_adg-_ad-__dev-c_ext-_prd-16570933_sig-CjwKCAiA29auBhBxEiwAnKcSqj6BeoKupbwP-RZPg070JTDrAJbdjpTrq6t5b-9uiSRsAz9o3Zma6BoCn0wQAvD_BwE&gad_source=1&gclid=CjwKCAiA29auBhBxEiwAnKcSqj6BeoKupbwP-RZPg070JTDrAJbdjpTrq6t5b-9uiSRsAz9o3Zma6BoCn0wQAvD_BwE">SEEED SMS</a></td>
+<td> <a href="https://metergroup.com/products/teros-12/">TEROS 12</a>, <a href="https://metergroup.com/products/teros-21/">TEROS 21</a>, <a href="https://www.digikey.pt/pt/products/detail/seeed-technology-co.,-ltd/314990620/16570933?utm_adgroup=&utm_source=google&utm_medium=cpc&utm_campaign=PMax_Product_All%20Products&utm_term=&productid=16570933&utm_content=&utm_id=go_cmp-20187105315_adg-_ad-__dev-c_ext-_prd-16570933_sig-CjwKCAiA29auBhBxEiwAnKcSqj6BeoKupbwP-RZPg070JTDrAJbdjpTrq6t5b-9uiSRsAz9o3Zma6BoCn0wQAvD_BwE&gad_source=1&gclid=CjwKCAiA29auBhBxEiwAnKcSqj6BeoKupbwP-RZPg070JTDrAJbdjpTrq6t5b-9uiSRsAz9o3Zma6BoCn0wQAvD_BwE">SEEED SMS</a></td>
 <td> Soil Temperature at depth #1</td>
 </tr>
 <tr>
@@ -246,7 +246,7 @@ Therefore, it was decided to create a new set of data types to be used in agricu
 <td> SOIL DIELECTRIC P </td>
 <td> 0x50 </td>
 <td> read * 100</td>
-<td> 5TE</td>
+<td> <a href="https://s.campbellsci.com/documents/ca/product-brochures/5te_br.pdf">5TE</a></td>
 <td> Soil Dielectric Permittivity</td>
 </tr>
 <tr>
@@ -288,7 +288,7 @@ Therefore, it was decided to create a new set of data types to be used in agricu
 <td> LEAF WETNESS </td>
 <td> 0x60 </td>
 <td> read * 100</td>
-<td> PHYTOS 31</td>
+<td> <a href="https://metergroup.com/products/phytos-31/">PHYTOS 31</a></td>
 <td> PHYTOS 31 -> 2.5 to 5 V (300 mV to 1250 mV) </td>
 </tr>
 <tr>
